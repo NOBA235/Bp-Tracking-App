@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import useLocalStorage from '../hooks/useLocalStorage'
+import useLocalStorage from '../components/hooks/useLocalStorage'
 
 const BPContext = createContext()
 
