@@ -362,3 +362,15 @@ body {
     gap: 8px;
   }
 }
+.patient-image{
+  height:60px;
+  width:60px;
+  border-radius: 50px;
+  align-items: center;
+}
+.pho{
+  object-fit: cover;
+  height: 100%;
+  width: 100%;
+  border-radius: 50px;
+}

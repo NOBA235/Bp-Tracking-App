@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import photo from "../../assets/dad.jpg";
+
 import { 
   FaHeartbeat, 
   FaHistory, 
@@ -18,7 +20,7 @@ const DashboardLayout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex ">
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg">
         <div className="p-6">
@@ -26,7 +28,9 @@ const DashboardLayout = ({ children }) => {
             <FaHeartbeat />Aier family BP Tracker
           </h1>
           <p className="text-gray-500 text-sm mt-2">Health Monitoring System for Father</p>
-          <img src='dad.png' className='photo'></img>
+         <div className='patient-image'>
+          <img src={photo} className="pho" alt="Dad" />
+    </div>
         </div>
         
         <nav className="mt-8">
