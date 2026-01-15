@@ -1,5 +1,4 @@
-// src/components/charts/BPChart.js
-import React from 'react';
+import React, { useMemo } from 'react'
 import {
   LineChart,
   Line,
@@ -10,154 +9,203 @@ import {
   Legend,
   ResponsiveContainer,
   Area,
-  AreaChart,
-  ReferenceLine,
-} from 'recharts';
-import { format, parseISO } from 'date-fns';
-import { Paper, Typography, Box, useTheme } from '@mui/material';
-import { getBPColor, analyzeBP } from '../../store/bpStore';
+  AreaChart
+} from 'recharts'
+import { format, parseISO } from 'date-fns'
+import { useBP } from '../../context/BPContext'
+import { getBPStats } from '../../utils/bpClassifier'
+import './BPChart.css'
 
-const BPChart = ({ readings, range }) => {
-  const theme = useTheme();
+const BPChart = ({ period = 'week' }) => {
+  const { state } = useBP()
+  
+  const chartData = useMemo(() => {
+    const now = new Date()
+    let cutoffDate = new Date()
+    
+    switch (period) {
+      case 'day':
+        cutoffDate.setDate(now.getDate() - 1)
+        break
+      case 'week':
+        cutoffDate.setDate(now.getDate() - 7)
+        break
+      case 'month':
+        cutoffDate.setMonth(now.getMonth() - 1)
+        break
+      case 'year':
+        cutoffDate.setFullYear(now.getFullYear() - 1)
+        break
+      default:
+        cutoffDate.setDate(now.getDate() - 7)
+    }
+    
+    const filteredReadings = state.readings.filter(reading => 
+      new Date(reading.timestamp) >= cutoffDate
+    )
+    
+    return filteredReadings
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .map(reading => ({
+        ...reading,
+        date: format(parseISO(reading.timestamp), 'MMM dd'),
+        time: format(parseISO(reading.timestamp), 'HH:mm'),
+        fullDate: reading.timestamp
+      }))
+  }, [state.readings, period])
 
-  // Prepare data for chart
-  const chartData = readings
-    .filter((reading) => {
-      const readingDate = new Date(reading.timestamp);
-      return readingDate >= new Date(range.start) && readingDate <= new Date(range.end);
-    })
-    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-    .map((reading) => ({
-      ...reading,
-      timestamp: format(new Date(reading.timestamp), 'MM/dd HH:mm'),
-      date: format(new Date(reading.timestamp), 'yyyy-MM-dd'),
-      category: analyzeBP(reading.systolic, reading.diastolic),
-      time: format(new Date(reading.timestamp), 'HH:mm'),
-    }));
-
-  // Custom tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const data = payload[0]?.payload;
       return (
-        <Paper sx={{ p: 2, border: 1, borderColor: 'divider', maxWidth: 250 }}>
-          <Typography variant="body2" color="textSecondary">
-            {data?.timestamp}
-          </Typography>
-          <Typography variant="body2" color="primary" sx={{ mt: 0.5 }}>
-            Systolic: <strong>{data?.systolic} mmHg</strong>
-          </Typography>
-          <Typography variant="body2" color="secondary">
-            Diastolic: <strong>{data?.diastolic} mmHg</strong>
-          </Typography>
-          <Typography variant="body2" color="text.primary">
-            Pulse: <strong>{data?.pulse || '--'} BPM</strong>
-          </Typography>
-          <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 0.5 }}>
-            Condition: {data?.condition ? data.condition.replace('_', ' ') : 'Not specified'}
-          </Typography>
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: getBPColor(data?.category),
-              fontWeight: 'bold',
-              display: 'block',
-              mt: 0.5
-            }}
-          >
-            {data?.category ? data.category.replace(/_/g, ' ').toUpperCase() : 'UNKNOWN'}
-          </Typography>
-        </Paper>
-      );
+        <div className="custom-tooltip">
+          <p className="tooltip-date">{label}</p>
+          <p className="tooltip-item">
+            <span className="tooltip-label">Systolic:</span>
+            <span className="tooltip-value systolic">{payload[0].value}</span>
+          </p>
+          <p className="tooltip-item">
+            <span className="tooltip-label">Diastolic:</span>
+            <span className="tooltip-value diastolic">{payload[1].value}</span>
+          </p>
+          {payload[2] && (
+            <p className="tooltip-item">
+              <span className="tooltip-label">Pulse:</span>
+              <span className="tooltip-value pulse">{payload[2].value}</span>
+            </p>
+          )}
+        </div>
+      )
     }
-    return null;
-  };
+    return null
+  }
+
+  const stats = getBPStats(chartData)
 
   if (chartData.length === 0) {
     return (
-      <Box sx={{ width: '100%', height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography variant="body1" color="text.secondary">
-          No readings available for the selected period
-        </Typography>
-      </Box>
-    );
+      <div className="no-data-chart">
+        <p>No BP readings available for the selected period.</p>
+        <p>Add your first reading to see the chart.</p>
+      </div>
+    )
   }
 
   return (
-    <Box sx={{ width: '100%', height: 400 }}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="chart-container">
+      <div className="chart-header">
+        <h3 className="chart-title">Blood Pressure Trends</h3>
+        <div className="chart-stats">
+          <div className="stat-item">
+            <span className="stat-label">Avg Systolic:</span>
+            <span className="stat-value">{stats.averageSystolic}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Avg Diastolic:</span>
+            <span className="stat-value">{stats.averageDiastolic}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Avg Pulse:</span>
+            <span className="stat-value">{stats.averagePulse || '-'}</span>
+          </div>
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={300}>
         <AreaChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-          <XAxis
-            dataKey="timestamp"
-            tick={{ fill: theme.palette.text.secondary }}
-            axisLine={{ stroke: theme.palette.divider }}
-            tickFormatter={(value) => {
-              try {
-                return format(parseISO(value.split(' ')[0] + 'T' + value.split(' ')[1]), 'MM/dd HH:mm');
-              } catch {
-                return value;
-              }
-            }}
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis 
+            dataKey="date" 
+            tick={{ fill: '#666' }}
+            axisLine={{ stroke: '#ddd' }}
           />
-          <YAxis
+          <YAxis 
+            tick={{ fill: '#666' }}
+            axisLine={{ stroke: '#ddd' }}
             label={{ 
               value: 'mmHg', 
               angle: -90, 
               position: 'insideLeft',
-              style: { fill: theme.palette.text.secondary }
+              offset: -10 
             }}
-            tick={{ fill: theme.palette.text.secondary }}
-            axisLine={{ stroke: theme.palette.divider }}
-            domain={[60, 180]}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           
-          {/* Reference lines for normal ranges */}
-          <ReferenceLine y={120} stroke="#4caf50" strokeDasharray="3 3" label="Normal Sys" />
-          <ReferenceLine y={80} stroke="#4caf50" strokeDasharray="3 3" label="Normal Dia" />
-          <ReferenceLine y={140} stroke="#ff9800" strokeDasharray="3 3" label="Stage 1" />
-          <ReferenceLine y={90} stroke="#ff9800" strokeDasharray="3 3" />
-          
-          {/* Areas for systolic and diastolic */}
+          {/* Normal Range Area */}
           <Area
+            type="monotone"
+            dataKey="normalMin"
+            stroke="transparent"
+            fill="#e8f5e9"
+            fillOpacity={0.3}
+            dot={false}
+            name="Normal Range"
+          />
+          
+          {/* Warning Range Area */}
+          <Area
+            type="monotone"
+            dataKey="warningMin"
+            stroke="transparent"
+            fill="#fff3cd"
+            fillOpacity={0.3}
+            dot={false}
+            name="Elevated Range"
+          />
+          
+          <Line
             type="monotone"
             dataKey="systolic"
             stroke="#ff6b6b"
-            fill="#ff6b6b"
-            fillOpacity={0.3}
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6, strokeWidth: 2 }}
             name="Systolic"
-            strokeWidth={2}
-            dot={{ r: 4, strokeWidth: 2 }}
-            activeDot={{ r: 6 }}
-          />
-          <Area
-            type="monotone"
-            dataKey="diastolic"
-            stroke="#4d96ff"
-            fill="#4d96ff"
-            fillOpacity={0.3}
-            name="Diastolic"
-            strokeWidth={2}
-            dot={{ r: 4, strokeWidth: 2 }}
-            activeDot={{ r: 6 }}
           />
           <Line
             type="monotone"
-            dataKey="pulse"
-            stroke="#6bc46d"
-            name="Pulse"
-            strokeWidth={1}
-            dot={{ r: 2 }}
+            dataKey="diastolic"
+            stroke="#4d96ff"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6, strokeWidth: 2 }}
+            name="Diastolic"
           />
+          
+          {/* Add pulse line if available */}
+          {chartData.some(r => r.pulse) && (
+            <Line
+              type="monotone"
+              dataKey="pulse"
+              stroke="#6bcf7f"
+              strokeWidth={1.5}
+              strokeDasharray="3 3"
+              dot={{ r: 3 }}
+              name="Pulse"
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
-    </Box>
-  );
-};
 
-export default BPChart;
+      <div className="chart-legend">
+        <div className="legend-item">
+          <div className="legend-color systolic"></div>
+          <span>Systolic (Top Number)</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-color diastolic"></div>
+          <span>Diastolic (Bottom Number)</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-color pulse"></div>
+          <span>Pulse Rate</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default BPChart
