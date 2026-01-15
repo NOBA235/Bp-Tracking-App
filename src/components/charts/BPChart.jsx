@@ -14,7 +14,7 @@ import {
 import { format, parseISO } from 'date-fns'
 import { useBP } from '../../context/BPContext'
 import { getBPStats } from '../../utils/bpClassifier'
-import './BPChart.css'
+
 
 const BPChart = ({ period = 'week' }) => {
   const { state } = useBP()

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { format, subDays } from 'date-fns'
 import { getBPStats } from '../../utils/bpClassifier'
-import './InsightsPanel.css'
+
 
 const InsightsPanel = ({ readings }) => {
   const insights = useMemo(() => {

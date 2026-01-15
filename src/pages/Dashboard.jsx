@@ -6,7 +6,7 @@ import StatsCard from '../components/analysis/StatsCard'
 import InsightsPanel from '../components/analysis/InsightsPanel'
 import { getBPStats } from '../utils/bpClassifier'
 import { format, subDays } from 'date-fns'
-import './Dashboard.css'
+
 
 const Dashboard = () => {
   const { state } = useBP()

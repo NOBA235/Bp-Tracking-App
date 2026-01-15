@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useBP } from '../../context/BPContext'
 import { classifyBP } from '../../utils/bpClassifier'
-import './BPEntryForm.css'
+
 
 const BPEntryForm = () => {
   const { addReading } = useBP()
