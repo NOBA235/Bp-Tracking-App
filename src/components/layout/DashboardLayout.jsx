@@ -23,9 +23,10 @@ const DashboardLayout = ({ children }) => {
       <div className="w-64 bg-white shadow-lg">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
-            <FaHeartbeat /> BP Tracker
+            <FaHeartbeat />Aier family BP Tracker
           </h1>
-          <p className="text-gray-500 text-sm mt-2">Health Monitoring System</p>
+          <p className="text-gray-500 text-sm mt-2">Health Monitoring System for Father</p>
+          <img src='dad.png' className='photo'></img>
         </div>
         
         <nav className="mt-8">
