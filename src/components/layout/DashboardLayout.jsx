@@ -27,7 +27,8 @@ const DashboardLayout = ({ children }) => {
       {/* Mobile Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b px-4 py-3 flex items-center justify-between lg:hidden">
         <h1 className="font-semibold text-blue-600 flex items-center gap-2">
-          <FaHeartbeat /> BP Tracker
+          <FaHeartbeat />BP Tracker • Built by Noba • © 2026
+
         </h1>
         <button
           onClick={() => setOpen(!open)}
